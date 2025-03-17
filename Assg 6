@@ -1,0 +1,160 @@
+#39. Sudoku Validator
+def is_valid_sudoku(board):
+    def is_valid_group(group):
+        nums = [num for num in group if num != "."]  
+        return len(nums) == len(set(nums))  
+
+    for i in range(9):
+        if not is_valid_group(board[i]) or not is_valid_group([board[j][i] for j in range(9)]):
+            return False
+
+    for i in range(0, 9, 3):
+        for j in range(0, 9, 3):
+            subgrid = [board[x][y] for x in range(i, i + 3) for y in range(j, j + 3)]
+            if not is_valid_group(subgrid):
+                return False
+    return True
+board = [
+    ["5", "3", ".", ".", "7", ".", ".", ".", "."],
+    ["6", ".", ".", "1", "9", "5", ".", ".", "."],
+    [".", "9", "8", ".", ".", ".", ".", "6", "."],
+    ["8", ".", ".", ".", "6", ".", ".", ".", "3"],
+    ["4", ".", ".", "8", ".", "3", ".", ".", "1"],
+    ["7", ".", ".", ".", "2", ".", ".", ".", "6"],
+    [".", "6", ".", ".", ".", ".", "2", "8", "."],
+    [".", ".", ".", "4", "1", "9", ".", ".", "5"],
+    [".", ".", ".", ".", "8", ".", ".", "7", "9"]
+]
+
+print(is_valid_sudoku(board))
+
+#40. Word Frequency in Text
+from collections import Counter
+import re
+
+def word_frequency(text):
+    words = re.findall(r'\b\w+\b', text.lower())  
+    return dict(Counter(words))  
+
+text = "Hello world! Hello everyone. Welcome to the world of Python."
+print(word_frequency(text))
+
+#41. Knapsack Problem (0/1)
+def knapsack(weights, values, capacity):
+    n = len(weights)
+    dp = [[0] * (capacity + 1) for _ in range(n + 1)]  
+
+    for i in range(1, n + 1):
+        for w in range(capacity + 1):
+            if weights[i - 1] <= w:
+                dp[i][w] = max(dp[i - 1][w], values[i - 1] + dp[i - 1][w - weights[i - 1]])
+            else:
+                dp[i][w] = dp[i - 1][w]
+    return dp[n][capacity]
+
+weights = [2, 3, 4, 5]
+values = [3, 4, 5, 6]
+capacity = 5
+print(knapsack(weights, values, capacity))
+
+#42. Merge Intervals
+def merge_intervals(intervals):
+    intervals.sort()
+    merged = [intervals[0]]
+
+    for start, end in intervals[1:]:
+        if start <= merged[-1][1]:  
+            merged[-1][1] = max(merged[-1][1], end)
+        else:
+            merged.append([start, end])
+    return merged
+
+intervals = [[1, 3], [2, 6], [8, 10], [15, 18]]
+print(merge_intervals(intervals))
+
+#43. Find the Median of Two Sorted Arrays
+def find_median_sorted_arrays(arr1, arr2):
+    merged = sorted(arr1 + arr2)
+    n = len(merged)
+    mid = n // 2
+
+    return (merged[mid] + merged[mid - 1]) / 2 if n % 2 == 0 else merged[mid]
+
+arr1 = [1, 3]
+arr2 = [2]
+print(find_median_sorted_arrays(arr1, arr2))
+
+#44. Maximal Rectangle in Binary Matrix
+def maximal_rectangle(matrix):
+    if not matrix:
+        return 0
+
+    def largest_histogram_area(heights):
+        stack, max_area = [], 0
+        heights.append(0)
+
+        for i, h in enumerate(heights):
+            while stack and heights[stack[-1]] > h:
+                height = heights[stack.pop()]
+                width = i if not stack else i - stack[-1] - 1
+                max_area = max(max_area, height * width)
+            stack.append(i)
+        return max_area
+
+    max_area = 0
+    row_histogram = [0] * len(matrix[0])
+
+    for row in matrix:
+        for i in range(len(row)):
+            row_histogram[i] = row_histogram[i] + 1 if row[i] == '1' else 0
+        max_area = max(max_area, largest_histogram_area(row_histogram))
+
+    return max_area
+    
+matrix =[ 
+    ["1", "0", "1", "0", "0"],
+    ["1", "0", "1", "1", "1"],
+    ["1", "1", "1", "1", "1"],
+    ["1", "0", "0", "1", "0"]
+    ]
+print(maximal_rectangle(matrix))
+
+#45. Largest Sum Contiguous Subarray (Kadane's Algorithm)
+def max_subarray_sum(nums):
+    max_sum = current_sum = nums[0]
+
+    for num in nums[1:]:
+        current_sum = max(num, current_sum + num)
+        max_sum = max(max_sum, current_sum)
+    return max_sum
+
+nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]
+print(max_subarray_sum(nums))
+
+#46. Word Ladder Problem
+from collections import deque
+
+def word_ladder_length(begin_word, end_word, word_list):
+    word_set = set(word_list)
+    if end_word not in word_set:
+        return 0
+
+    queue = deque([(begin_word, 1)])
+
+    while queue:
+        word, length = queue.popleft()
+        if word == end_word:
+            return length
+
+        for i in range(len(word)):
+            for char in "abcdefghijklmnopqrstuvwxyz":
+                next_word = word[:i] + char + word[i+1:]
+                if next_word in word_set:
+                    queue.append((next_word, length + 1))
+                    word_set.remove(next_word)
+    return 0
+
+begin_word = "hit"
+end_word = "cog"
+word_list = ["hot", "dot", "dog", "lot", "log", "cog"]
+print(word_ladder_length(begin_word, end_word, word_list))

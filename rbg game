@@ -1,0 +1,130 @@
+import json
+import random
+
+class Player:
+    def __init__(self, name):
+        self.name = name
+        self.health = 100
+        self.attack = 10
+        self.defense = 5
+        self.inventory = []
+        self.location = "Town Square"
+
+    def show_stats(self):
+        print(f"\n🔹 {self.name} - Health: {self.health}, Attack: {self.attack}, Defense: {self.defense}")
+    
+    def show_inventory(self):
+        if self.inventory:
+            print("\n Inventory:", ", ".join(self.inventory))
+        else:
+            print("\n Inventory is empty.")
+
+    def take_damage(self, damage):
+        reduced_damage = max(0, damage - self.defense)
+        self.health -= reduced_damage
+        print(f"\n {self.name} takes {reduced_damage} damage! Health left: {self.health}")
+        if self.health <= 0:
+            print("\n You have died! Game Over.")
+
+class Enemy:
+    def __init__(self, name, health, attack):
+        self.name = name
+        self.health = health
+        self.attack = attack
+
+    def take_damage(self, damage):
+        self.health -= damage
+        print(f"\n {self.name} takes {damage} damage! Health left: {self.health}")
+
+def fight(player, enemy):
+    print(f"\n A wild {enemy.name} appears! Prepare for battle!")
+    
+    while player.health > 0 and enemy.health > 0:
+        action = input("\nDo you want to (A)ttack or (R)un? ").lower()
+        if action == "a":
+            enemy.take_damage(player.attack)
+            if enemy.health > 0:
+                player.take_damage(enemy.attack)
+        elif action == "r":
+            print("\n You ran away!")
+            break
+        else:
+            print("\n Invalid choice!")
+
+    if enemy.health <= 0:
+        print(f"\n You defeated {enemy.name}!")
+        player.inventory.append("Gold Coin")
+        print(" You found a Gold Coin!")
+
+def explore(player):
+    locations = ["Dark Forest", "Misty Cave", "Ancient Ruins"]
+    new_location = random.choice(locations)
+    player.location = new_location
+    print(f"\n You have arrived at {new_location}")
+
+    if random.random() < 0.6:
+        enemy = Enemy("Goblin", 30, 8)
+        fight(player, enemy)
+
+def save_game(player):
+    data = {
+        "name": player.name,
+        "health": player.health,
+        "attack": player.attack,
+        "defense": player.defense,
+        "inventory": player.inventory,
+        "location": player.location
+    }
+    with open("savegame.json", "w") as file:
+        json.dump(data, file)
+    print("\n Game Saved!")
+
+def load_game():
+    try:
+        with open("savegame.json", "r") as file:
+            data = json.load(file)
+            player = Player(data["name"])
+            player.health = data["health"]
+            player.attack = data["attack"]
+            player.defense = data["defense"]
+            player.inventory = data["inventory"]
+            player.location = data["location"]
+            print("\n Game Loaded!")
+            return player
+    except FileNotFoundError:
+        print("\n No save file found!")
+        return None
+
+# Game Loop
+def main():
+    print("\n Welcome to the RPG Adventure Game!")
+    choice = input("\nDo you want to (N)ew game or (L)oad game? ").lower()
+    
+    if choice == "l":
+        player = load_game()
+        if player is None:
+            player_name = input("\nEnter your hero's name: ")
+            player = Player(player_name)
+    else:
+        player_name = input("\nEnter your hero's name: ")
+        player = Player(player_name)
+
+    while player.health > 0:
+        print("\n Actions: (S)tats, (I)nventory, (E)xplore, (Q)uit")
+        action = input("Choose an action: ").lower()
+
+        if action == "s":
+            player.show_stats()
+        elif action == "i":
+            player.show_inventory()
+        elif action == "e":
+            explore(player)
+        elif action == "q":
+            save_game(player)
+            print("\n Goodbye!")
+            break
+        else:
+            print("\n Invalid choice!")
+
+if __name__ == "__main__":
+    main()
